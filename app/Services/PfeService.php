@@ -35,12 +35,17 @@ class PfeService
                 'nb_docs' => $data->docs,
                 'freq_max' => $data->freq_max,
             ]);
+            $idsDocs = [];
             foreach (range(1, $data->docs) as $index){
-                Document::query()->create([
+                $foreachDoc = Document::query()->create([
                     'title' => 'Le Domaine est '.$profile->area_fr.' Spécialité['.$profile->specialty.'] => Docs('.$index.')',
                     'date' => date('Y-m-d'),
                     'profile_id' => $profile->id,
                 ]);
+                $obj = new \stdClass();
+                $obj->index = $index;
+                $obj->id_doc = $foreachDoc->id;
+                $idsDocs[] = $obj;
             }
             $profile = Profile::with('documents')->find($profile->id);
             $profile->update([
@@ -56,8 +61,13 @@ class PfeService
                 ]);
                 $freqTotal = collect($item->docs)->sum('count');
                 foreach ($item->docs as $doc){
-                    $document = Document::query()->find($doc->id);
-                    $document->terms()->attach($term->id, ['freq' => $doc->count]);
+                    $idDocFromObj = collect($idsDocs)->filter(function ($itemDoc) use ($doc){
+                        return $itemDoc->index == $doc->id;
+                    })->first();
+                    if($idDocFromObj != null){
+                        $document = Document::query()->find($idDocFromObj->id_doc);
+                        $document->terms()->attach($term->id, ['freq' => $doc->count]);
+                    }
                 }
 
                 $pProfileTerm = ProfileTerm::query()->where([
@@ -104,7 +114,13 @@ class PfeService
                 $docs = $event['docs'];
                 unset($event['docs']);
                 $pEventPass = EventPass::query()->create($event);
-                $documentIds = collect($docs)->pluck('id')->all();
+                $docsData = [];
+                foreach (collect($docs)->pluck('id')->all() as $id){
+                    $docsData[] = collect($idsDocs)->filter(function ($itemDoc) use ($id){
+                        return $itemDoc->index == $id;
+                    })->first();
+                }
+                $documentIds = collect($docsData)->pluck('id_doc')->all();
                 $pEventPass->documents()->attach($documentIds);
                 $calcWeightEventPass = $this->calcWeightEventPass(count($docs), $profile->nb_docs);
                 $profile->eventPasses()->attach($pEventPass->id, [
@@ -130,17 +146,6 @@ class PfeService
                             count($pEventPass->documents),
                         )
                     ]);
-                    /*$profile->termEventPasses()->attach($term->id, [
-                        'event_pass_id' => $pEventPass->id,
-                        'nb_docs_com' => $nbDocsCom,
-                        'sim_te' => $this->calcSimTermEventPass(
-                            $term->pivot->weight,
-                            $calcWeightEventPass,
-                            $nbDocsCom,
-                            count($term->documents),
-                            count($pEventPass->documents),
-                        )
-                    ]);*/
                 }
             }
         }
@@ -228,6 +233,55 @@ class PfeService
     }
     //================================================= Application ==========================================================
     public function search($query){
+        $pProfile = Profile::with([
+            'documents',
+            'terms.documents',
+            'eventPasses.documents',
+            'termTerms',
+            //'termTerms.term2',
+            'termEventPasses'
+        ])->find(Auth::id());
+        $idsDocs = $pProfile->documents->pluck('id')->all();
+        $idsDocs = [
+            $idsDocs[count($idsDocs) - 1],
+            $idsDocs[count($idsDocs) - 1] - 2,
+        ];
+        $weightTerm = $this->calcWeightTerm($pProfile->freq_max, 1, $pProfile->nb_docs, count($idsDocs));
+
+        $dataResponse = [];
+        foreach ($pProfile->terms as $term){
+            $obj = new \stdClass();
+            $obj->query = $query;
+            $obj->term = $term->term_name;
+            $obj->nb_docs_com = count(array_intersect(
+                collect($term->documents)->pluck('id')->all(),
+                $idsDocs
+            ));
+            $obj->calc = $this->calcSimTermTerm($term->documents->count(), count($idsDocs), $obj->nb_docs_com);
+            $dataResponse[] = $obj;
+        }
+        foreach ($pProfile->eventPasses as $eventPass){
+            $weightEventPass = $this->calcWeightEventPass(count($eventPass->documents), $pProfile->nb_docs);
+            $obj = new \stdClass();
+            $obj->query = $query;
+            $obj->event_pass = $eventPass->name;
+            $obj->nb_docs_com = count(array_intersect(
+                collect($eventPass->documents)->pluck('id')->all(),
+                $idsDocs
+            ));
+            $obj->calc = $this->calcSimTermEventPass(
+                $weightTerm,
+                $weightEventPass,
+                $obj->nb_docs_com,
+                count($idsDocs),
+                count($eventPass->documents),
+            );
+            $dataResponse[] = $obj;
+        }
+
+        return collect($dataResponse)->sortByDesc('calc');
+    }
+    public function searchV1($query){
         $query = strtolower($query);
         $pProfile = Profile::with([
             'documents',
@@ -286,7 +340,6 @@ class PfeService
 //            "top_search" =>
 //        ];
     }
-
     private function attachTermDocumentProfile($pProfile, $term){
         $idsDocs = $pProfile->documents->pluck('id')->all();
         $term->documents()->attach($idsDocs[count($idsDocs) - 1], [
@@ -314,15 +367,15 @@ class PfeService
                 'sim_tt' => $this->calcSimTermTerm($term1->documents->count(), $term->documents->count(), $nbDocsCom),
             ]);
         }
-        $tProfile = Profile::with('terms.documents')->find($pProfile->id);
+        $tProfile = Profile::with(['terms.documents', 'eventPasses'])->find($pProfile->id);
         $term = $tProfile->terms->where('term_name', $term->term_name)->first();
-        foreach ($pProfile->eventPasses as $eventPass){
+        foreach ($tProfile->eventPasses as $eventPass){
             $nbDocsCom = count(array_intersect(
                 collect($term->documents)->pluck('id')->all(),
                 collect($eventPass->documents)->pluck('id')->all()
             ));
             ProfileTermEventPass::query()->create([
-                'profile_id' => $pProfile->id,
+                'profile_id' => $tProfile->id,
                 'term_id' => $term->id,
                 'event_pass_id' => $eventPass->id,
                 'nb_docs_com' => $nbDocsCom,
