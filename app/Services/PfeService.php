@@ -228,7 +228,8 @@ class PfeService
         }
         return [
             'status'=> true,
-            'token' => $pProfile->createToken('token')->plainTextToken
+            'token' => $pProfile->createToken('token')->plainTextToken,
+            'info' => $pProfile->toArray()
         ];
     }
     //================================================= Application ==========================================================

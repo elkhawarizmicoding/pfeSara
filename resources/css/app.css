@@ -1,0 +1,79 @@
+body{
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    overflow-y: auto;
+    font-family: 'Cairo', sans-serif !important;
+    background-color: #f4f4f4;
+}
+.warp-center{
+    height: 100vh;
+}
+.custom-navbar{
+    background-color: #ffffff;
+    width: 100%;
+    /* border-bottom: 2px solid #ff993a; */
+    box-shadow: 0 0 7px 4px rgb(255 153 58 / 57%);
+}
+.custom-text-logo{
+    width: 100px;
+    padding-top: 0.3em;
+    height: 45px;
+}
+.span-logo{
+    display: block;
+    position: relative;
+    top: -10px;
+}
+.custom-input{
+    border-radius: 50px !important;
+    padding-right: 30px !important;
+    padding-left: 190px !important;
+}
+.form-control:focus {
+    color: rgb(33, 37, 41);
+    background-color: rgb(248, 250, 252);
+    border-color: #ced4da !important;
+    outline: unset !important;
+    box-shadow: unset !important;
+}
+i.pin-search{
+    right: 0;
+    top: 0;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 1.8em;
+    height: 47px;
+    width: 55px;
+    background-color: #ff993a;
+    border-bottom-right-radius: 50px;
+    border-top-right-radius: 50px;
+}
+.custom-dropdown{
+    left: 0;
+    top: 0;
+}
+.custom-dropdown button{
+    border-radius: 0 !important;
+    border-top-left-radius: 50px !important;
+    border-bottom-left-radius: 50px !important;
+    height: 47px;
+    background-color: #ccc;
+    width: 185px;
+    max-width: 185px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    border: none;
+}
+.custom-welcome{
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+.custom-welcome-text{
+    /*top: 70%;*/
+    /*left: 50%;*/
+    /*transform: translate(-50%, -50%);*/
+    font-size: 2em;
+    color: #9ca3af;
+}
