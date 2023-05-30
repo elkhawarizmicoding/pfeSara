@@ -15,8 +15,19 @@ class AppController extends Controller
         ]);
         return response()->json((new PfeService())->login($request->toArray()));
     }
-    public function search($query){
-        return response()->json((new PfeService())->search($query));
+    public function search($mode, $query){
+        $service = new PfeService();
+        if($mode == 'classic_search'){
+            //searchClassic
+            return response()->json($service->searchClassic($query));
+        }elseif($mode == 'personalized_search'){
+            //searchPersonalized
+            return response()->json($service->searchPersonalized($query));
+        }
+        return response()->json([
+            'status' => false,
+        ]);
+
     }
 
 

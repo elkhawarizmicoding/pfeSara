@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('search/{query}', [AppController::class, 'search']);
+    Route::get('search/{mode}/{query}', [AppController::class, 'search']);
 });
 
 

@@ -233,7 +233,7 @@ class PfeService
         ];
     }
     //================================================= Application ==========================================================
-    public function search($query){
+    public function searchPersonalized($query){
         $pProfile = Profile::with([
             'documents',
             'terms.documents',
@@ -389,5 +389,31 @@ class PfeService
                 )
             ]);
         }
+    }
+    //=========================================================================================
+    public function searchClassic($query){
+        $curl = curl_init();
+
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'https://zylalabs.com/api/104/google+web+searching+api/150/scrape?search='.$query.'&country_code=us&language=en&nb_results=10&page=1',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'GET',
+            CURLOPT_HTTPHEADER => array(
+                'Authorization: Bearer 1323|oxwx1bRvHDocA9AhZuQD2luN814KOHkYNbQJggMw'
+            ),
+        ));
+
+        $response = curl_exec($curl);
+
+        curl_close($curl);
+        return [
+            'status' => true,
+            'data' => collect(json_decode($response)->organic_results)
+        ];
     }
 }

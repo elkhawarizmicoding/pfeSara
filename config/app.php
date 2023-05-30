@@ -168,6 +168,7 @@ return [
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
+        AlesZatloukal\GoogleSearchApi\GoogleSearchApiProvider::class,
     ])->toArray(),
 
     /*
@@ -183,6 +184,7 @@ return [
 
     'aliases' => Facade::defaultAliases()->merge([
         // 'Example' => App\Facades\Example::class,
+        'GoogleSearchApi' => AlesZatloukal\GoogleSearchApi\Facades\GoogleSearchApi::class,
     ])->toArray(),
 
 ];
