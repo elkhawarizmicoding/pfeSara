@@ -14,6 +14,7 @@ body{
     width: 100%;
     /* border-bottom: 2px solid #ff993a; */
     box-shadow: 0 0 7px 4px rgb(255 153 58 / 57%);
+    z-index: 9999;
 }
 .custom-text-logo{
     width: 100px;
@@ -37,7 +38,7 @@ body{
     outline: unset !important;
     box-shadow: unset !important;
 }
-i.pin-search{
+button.pin-search{
     right: 0;
     top: 0;
     color: #ffffff;
@@ -46,8 +47,9 @@ i.pin-search{
     height: 47px;
     width: 55px;
     background-color: #ff993a;
-    border-bottom-right-radius: 50px;
-    border-top-right-radius: 50px;
+    border-radius: 0 !important;
+    border-bottom-right-radius: 50px !important;
+    border-top-right-radius: 50px !important;
 }
 .custom-dropdown{
     left: 0;
@@ -76,4 +78,65 @@ i.pin-search{
     /*transform: translate(-50%, -50%);*/
     font-size: 2em;
     color: #9ca3af;
+}
+.custom-border-left{
+    border-left: 3px solid #9ca3af !important;
+    border-color: #ff993a !important;
+}
+.custom-border-left .v-card-title{
+    font-weight: bold;
+}
+.custom-border-left .v-card-text{
+    height: 100px !important;
+}
+.cover-loading{
+    z-index: 999;
+    background-color: #000000b8;
+}
+
+.lds-ripple {
+    display: inline-block;
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+.lds-ripple div {
+    position: absolute;
+    border: 4px solid #fff;
+    opacity: 1;
+    border-radius: 50%;
+    animation: lds-ripple 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+.lds-ripple div:nth-child(2) {
+    animation-delay: -0.5s;
+}
+@keyframes lds-ripple {
+    0% {
+        top: 36px;
+        left: 36px;
+        width: 0;
+        height: 0;
+        opacity: 0;
+    }
+    4.9% {
+        top: 36px;
+        left: 36px;
+        width: 0;
+        height: 0;
+        opacity: 0;
+    }
+    5% {
+        top: 36px;
+        left: 36px;
+        width: 0;
+        height: 0;
+        opacity: 1;
+    }
+    100% {
+        top: 0px;
+        left: 0px;
+        width: 72px;
+        height: 72px;
+        opacity: 0;
+    }
 }
