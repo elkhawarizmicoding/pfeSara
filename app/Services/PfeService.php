@@ -396,7 +396,9 @@ class PfeService
         $apiKey = '79490538637532ce5d789e313a72e633da5bc6879d07d4c38b4a3b4f6af3c569';
         $url = 'https://serpapi.com/search.json?q='.$query.'&location=Algeria&hl=fr&gl=fr&google_domain=google.com&api_key='.$apiKey;
 
-        $response = Http::accept('application/json')->get($url);
+        $response = Http::withOptions([
+            'verify' => false
+        ])->accept('application/json')->get($url);
 
         return [
             'status' => true,
