@@ -3,10 +3,12 @@
 namespace App\Services;
 
 use App\Http\Resources\EventForMargeResource;
+use App\Http\Resources\EventPassViewResource;
 use App\Http\Resources\ProfileResource;
 use App\Http\Resources\TermEventPassResource;
 use App\Http\Resources\TermForMargeResource;
 use App\Http\Resources\TermTermResource;
+use App\Http\Resources\TermViewResource;
 use App\Models\Document;
 use App\Models\EventPass;
 use App\Models\Profile;
@@ -250,7 +252,7 @@ class PfeService
         ];
         $weightTerm = $this->calcWeightTerm($pProfile->freq_max, 1, $pProfile->nb_docs, count($idsDocs));
 
-        $dataResponse = [];
+        $dataTerms = [];
         foreach ($pProfile->terms as $term){
             $obj = new \stdClass();
             $obj->query = $query;
@@ -260,8 +262,9 @@ class PfeService
                 $idsDocs
             ));
             $obj->calc = $this->calcSimTermTerm($term->documents->count(), count($idsDocs), $obj->nb_docs_com);
-            $dataResponse[] = $obj;
+            $dataTerms[] = $obj;
         }
+        $dataEvents = [];
         foreach ($pProfile->eventPasses as $eventPass){
             $weightEventPass = $this->calcWeightEventPass(count($eventPass->documents), $pProfile->nb_docs);
             $obj = new \stdClass();
@@ -278,10 +281,17 @@ class PfeService
                 count($idsDocs),
                 count($eventPass->documents),
             );
-            $dataResponse[] = $obj;
+            $dataEvents[] = $obj;
         }
 
-        return collect($dataResponse)->sortByDesc('calc');
+        return [
+            'status' => true,
+            'terms' => TermViewResource::collection($pProfile->terms),
+            'events' => EventPassViewResource::collection($pProfile->eventPasses),
+            'sum_terms' => collect($dataTerms)->sum('calc'),
+            'sum_events' => collect($dataEvents)->sum('calc'),
+            'data' => collect(array_merge($dataTerms, $dataEvents))->sortByDesc('calc')
+        ];
     }
     public function searchV1($query){
         $query = strtolower($query);
@@ -315,16 +325,18 @@ class PfeService
             return $item->pivot->term2_id == $term->id;
         });
         $dataTerms = collect(TermForMargeResource::collection($dataTerms))->sortByDesc('sim_tt');
-        //$dataTerms = collect(TermTermResource::collection($dataTerms))->sortByDesc('sim_tt');
         $dataEvent = collect($pProfile->termEventPasses)->filter(function ($item) use ($term){
             return $item->pivot->term_id == $term->id;
         });
         $dataEvent = collect(EventForMargeResource::collection($dataEvent))->sortByDesc('sim_te');
-        //$dataEvent = collect(TermEventPassResource::collection($dataEvent))->sortByDesc('sim_te');
 
-        return Arr::sort(array_merge($dataTerms->toArray(), $dataEvent->toArray()), function ($item){
-            return $item->calc;
-        });
+        return [
+            'sum_terms' => collect($dataTerms)->sum('calc'),
+            'sum_events' => collect($dataEvent)->sum('calc'),
+            'data' => Arr::sort(array_merge($dataTerms->toArray(), $dataEvent->toArray()), function ($item){
+                return $item->calc;
+            })
+        ];
 
 //        return [
 //            "status" => true,

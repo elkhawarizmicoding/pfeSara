@@ -32,7 +32,7 @@ body{
 .custom-input{
     border-radius: 50px !important;
     padding-right: 30px !important;
-    padding-left: 190px !important;
+    padding-left: 195px !important;
 }
 .form-control:focus {
     color: rgb(33, 37, 41);
@@ -64,11 +64,16 @@ button.pin-search{
     border-bottom-left-radius: 50px !important;
     height: 47px;
     background-color: #ccc;
-    width: 185px;
-    max-width: 185px;
+    width: 190px;
+    max-width: 190px;
     text-overflow: ellipsis;
     overflow: hidden;
     border: none;
+}
+.custom-dropdown button.dropdown-toggle::after{
+    margin-left: .5em !important;
+    position: relative;
+    top: 2px;
 }
 .custom-welcome{
     top: 50%;
@@ -142,4 +147,15 @@ button.pin-search{
         height: 72px;
         opacity: 0;
     }
+}
+
+.custom-toolbar{
+    border-bottom: 2px solid #ff993a !important;
+}
+.custom-toolbar .v-toolbar__content{
+    height: 45px !important;
+
+}
+.custom-toolbar .v-toolbar__content .v-toolbar-title__placeholder{
+    font-weight: bold !important;
 }

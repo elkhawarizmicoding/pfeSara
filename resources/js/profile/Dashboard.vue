@@ -27,11 +27,11 @@
                             ></v-btn>
                             <div class="dropdown position-absolute custom-dropdown">
                                 <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Recherche classique
+                                    {{dropdown_title}}
                                 </button>
                                 <ul class="dropdown-menu">
-                                    <li @click="onSelectMode('classic_search')"><a class="dropdown-item active">Recherche classique</a></li>
-                                    <li @click="onSelectMode('personalized_search')"><a class="dropdown-item">Recherche personnalisé</a></li>
+                                    <li @click="onSelectMode('classic_search')"><a class="dropdown-item" :class="form.mode === 'classic_search' ? 'active': ''">Recherche classique</a></li>
+                                    <li @click="onSelectMode('personalized_search')"><a class="dropdown-item" :class="form.mode === 'personalized_search' ? 'active': ''">Recherche personnalisé</a></li>
                                 </ul>
                             </div>
                             <input class="form-control custom-input h-100" v-model="form.query" placeholder="Entrez la recherche">
@@ -59,7 +59,8 @@
                 </div>
             </div>
             <v-container>
-                <Classic class="mt-3" :search_response.sync="search_response" v-if="form.mode === 'classic_search' && search_response.length > 0"></Classic>
+                <Classic class="mt-3" :search_response.sync="search_response_classic" v-if="form.mode === 'classic_search' && search_response_classic.length > 0"></Classic>
+                <Personalized class="mt-3" :search_response.sync="search_response_personalized" v-else-if="form.mode === 'personalized_search' && search_response_personalized !== null"></Personalized>
                 <welcome v-else class="position-absolute custom-welcome"></welcome>
             </v-container>
         </div>
@@ -69,10 +70,12 @@
 <script>
 import Welcome from "../components/Welcome.vue";
 import Classic from "../components/search/Classic.vue";
+import Personalized from "../components/search/Personalized.vue";
 
 export default {
     name: "Dashboard",
-    components: {Classic, Welcome},
+    computed: {},
+    components: {Personalized, Classic, Welcome},
     data(){
         return {
             form: {
@@ -81,35 +84,43 @@ export default {
                 loading: false,
                 error: false,
             },
-            search_response: [],
+            dropdown_title: 'Recherche classique',
+            search_response_classic: [],
+            search_response_personalized: null,
+            //
         }
     },
     methods: {
         onSelectMode(mode){
             this.form.mode = mode;
+            if(this.form.mode === 'classic_search') {
+                this.dropdown_title = 'Recherche classique';
+            }else if(this.form.mode === 'personalized_search'){
+                this.dropdown_title = 'Recherche personnalisé';
+            }
         },
         async search(){
             if(this.form.query == null || this.form.query.length === 0){
-                this.flashMessage.error({
-                    title: 'Error Message Title',
-                    message: 'Oh, you broke my heart! Shame on you!'
-                });
                 return;
             }
             this.form.loading = true
             this.form.error = false
-            this.search_response = [];
             await axios.get(`search/${this.form.mode}/${this.form.query}`).then(res => {
                 const response = res.data;
                 if(response.status){
-                    response.data.forEach((item, index) => {
-                        this.search_response.push({
-                            title: item.title,
-                            description: item.snippet,
-                            url: item.link,
+                    if(this.form.mode === 'classic_search'){
+                        this.search_response_classic = [];
+                        response.data.forEach((item, index) => {
+                            this.search_response_classic.push({
+                                title: item.title,
+                                description: item.snippet,
+                                url: item.link,
+                            });
                         });
-                    });
-                    console.log(this.search_response);
+                    }else if(this.form.mode === 'personalized_search'){
+                        this.search_response_personalized = response;
+                        console.log(this.search_response_personalized)
+                    }
                 }else{
                     this.form.error = true;
                 }
