@@ -29,6 +29,15 @@ class AppController extends Controller
         ]);
 
     }
-
+    public function updateProfile(Request $request){
+        $request->validate([
+            'email' => 'required|email',
+            'full_name' => 'required',
+            'phone' => 'required',
+            'age' => 'required',
+            'sex' => 'required|in:women,man',
+        ]);
+        return response()->json((new PfeService())->updateProfile($request->toArray()));
+    }
 
 }

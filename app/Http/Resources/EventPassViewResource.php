@@ -19,7 +19,7 @@ class EventPassViewResource extends JsonResource
         return [
             'name' => ucfirst(strtolower($this->name)),
             'lieu' => ucfirst(strtolower($this->lieu)),
-            'date' => Carbon::parse($this->date)->format('d/m/Y h:i'),
+            'date' => Carbon::parse($this->date)->format('d/m/Y'),
             'docs' => $docs < 10 ? "0{$docs}" : $docs,
         ];
     }

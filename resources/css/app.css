@@ -91,10 +91,17 @@ button.pin-search{
     border-left: 3px solid #9ca3af !important;
     border-color: #ff993a !important;
 }
+.custom-border-left.border-green{
+    border-color: #2ecc71 !important;
+}
+.custom-border-left.border-grey{
+    border-color: #bdc3c7 !important;
+}
+
 .custom-border-left .v-card-title{
     font-weight: bold;
 }
-.custom-border-left .v-card-text{
+.custom-card .v-card-text{
     height: 100px !important;
 }
 .cover-loading{
@@ -158,4 +165,13 @@ button.pin-search{
 }
 .custom-toolbar .v-toolbar__content .v-toolbar-title__placeholder{
     font-weight: bold !important;
+}
+.custom-border-selected{
+    /*box-shadow: 0 0 1px 5px #2ecc7155 !important;*/
+}
+.custom-menu{
+    z-index: 999999 !important;
+}
+.custom-menu .v-overlay__content{
+    top: 85px !important;
 }

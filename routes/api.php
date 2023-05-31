@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('search/{mode}/{query}', [AppController::class, 'search']);
+    Route::post('profile/update', [AppController::class, 'updateProfile']);
 });
 
 

@@ -18,7 +18,7 @@
                                     <v-text-field
                                         v-model="form.email"
                                         type="email"
-                                        label="Email address"
+                                        label="Adresse e-mail"
                                         hide-details="auto"
                                         prepend-inner-icon="mdi-email"
                                         :rules="emailRules"
@@ -27,7 +27,7 @@
                                     <v-text-field
                                         v-model="form.password"
                                         type="password"
-                                        label="Password"
+                                        label="Mot de passe"
                                         hide-details="auto"
                                         prepend-inner-icon="mdi-lock"
                                         :rules="passwordRules"
@@ -95,7 +95,7 @@ export default {
                     this.$store.commit('setAuthentication', true);
                     this.$store.commit('setToken', response.token);
                     this.$store.commit('setUserInfo', response.info);
-                    this.$router.push('/')
+                    location.reload();
                 }else{
                     this.error = true;
                 }

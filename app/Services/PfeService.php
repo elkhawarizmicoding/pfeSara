@@ -253,6 +253,7 @@ class PfeService
         $weightTerm = $this->calcWeightTerm($pProfile->freq_max, 1, $pProfile->nb_docs, count($idsDocs));
 
         $dataTerms = [];
+        $dataResponse = [];
         foreach ($pProfile->terms as $term){
             $obj = new \stdClass();
             $obj->query = $query;
@@ -262,11 +263,16 @@ class PfeService
                 $idsDocs
             ));
             $obj->calc = $this->calcSimTermTerm($term->documents->count(), count($idsDocs), $obj->nb_docs_com);
+
+            $obj->nb_docs_query = count($idsDocs);
+            $obj->nb_docs_term = $term->documents->count();
+
             $dataTerms[] = $obj;
+            $dataResponse[] = $obj;
         }
         $dataEvents = [];
         foreach ($pProfile->eventPasses as $eventPass){
-            $weightEventPass = $this->calcWeightEventPass(count($eventPass->documents), $pProfile->nb_docs);
+            $weightEventPass = $this->calcWeightEventPass($eventPass->documents->count(), $pProfile->nb_docs);
             $obj = new \stdClass();
             $obj->query = $query;
             $obj->event_pass = $eventPass->name;
@@ -281,16 +287,35 @@ class PfeService
                 count($idsDocs),
                 count($eventPass->documents),
             );
+
+            $obj->nb_docs_query = count($idsDocs);
+            $obj->nb_docs_event = $eventPass->documents->count();
+            $obj->weight_query = $weightTerm;
+            $obj->weight_event = $weightEventPass;
+
+
             $dataEvents[] = $obj;
+            $dataResponse[] = $obj;
         }
+
+        $data = [];
+        foreach (collect($dataResponse)->sortByDesc('calc') as $item){
+            $data[] = $item;
+        }
+
+        $sumTerms = collect($dataTerms)->sum('calc');
+        $sumEvents = collect($dataEvents)->sum('calc');
 
         return [
             'status' => true,
+            'query' => $query,
             'terms' => TermViewResource::collection($pProfile->terms),
             'events' => EventPassViewResource::collection($pProfile->eventPasses),
-            'sum_terms' => collect($dataTerms)->sum('calc'),
-            'sum_events' => collect($dataEvents)->sum('calc'),
-            'data' => collect(array_merge($dataTerms, $dataEvents))->sortByDesc('calc')
+            'sum_terms' => $sumTerms,
+            'sum_events' => $sumEvents,
+            'selected_term' => $sumTerms > $sumEvents,
+            'selected_event' => $sumEvents > $sumTerms,
+            'data' => $data
         ];
     }
     public function searchV1($query){
@@ -415,6 +440,15 @@ class PfeService
         return [
             'status' => true,
             'data' => collect(json_decode($response)->organic_results)
+        ];
+    }
+    public function updateProfile($data){
+        $profile = Profile::query()->find(Auth::id());
+        $profile->update($data);
+
+        return [
+            'status' => true,
+            'info' => $profile
         ];
     }
 }
