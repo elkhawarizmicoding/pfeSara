@@ -16,6 +16,7 @@
                                 </v-col>
                                 <v-col cols="12">
                                     <v-text-field
+                                        class="mb-2"
                                         v-model="form.email"
                                         type="email"
                                         label="Adresse e-mail"
@@ -26,11 +27,13 @@
                                     ></v-text-field>
                                     <v-text-field
                                         v-model="form.password"
-                                        type="password"
+                                        :type="showPassword ? 'text' : 'password'"
                                         label="Mot de passe"
                                         hide-details="auto"
                                         prepend-inner-icon="mdi-lock"
+                                        :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
                                         :rules="passwordRules"
+                                        @click:append-inner="showPassword = !showPassword"
                                         required
                                     ></v-text-field>
 
@@ -82,7 +85,8 @@ export default {
             form: {
                 email: null,
                 password: null,
-            }
+            },
+            showPassword: false,
         }
     },
     methods: {
