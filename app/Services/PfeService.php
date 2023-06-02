@@ -67,7 +67,7 @@ class PfeService
             $terms = $this->splitTerms($data->terms);
             foreach ($terms as $item){
                 $term = Term::query()->create([
-                    'term_name' => $item->name
+                    'term_name' => strtolower($item->name)
                 ]);
                 $freqTotal = collect($item->docs)->sum('count');
                 foreach ($item->docs as $doc){
@@ -268,15 +268,14 @@ class PfeService
             'termTerms',
             'termEventPasses'
         ])->find(Auth::id());
-        $pTerm = $pProfile->terms->where('term_name', $query);
+        $pTerm = $pProfile->terms->where('term_name', strtolower($query));
         if($pTerm->count()){
             $pTerm = $pTerm->first();
             $pTerm = Term::with('documents')->find($pTerm->id);
             $weightTerm = $this->calcWeightTerm($pProfile->freq_max, 1, $pProfile->nb_docs, $pTerm->documents->count());
             $dataTerms = [];
-            $dataResponse = [];
             foreach ($pProfile->terms as $term){
-                if($term->term_name != $query){
+                if(strtolower($term->term_name) != strtolower($query)){
                     $obj = new \stdClass();
                     $obj->query = $query;
                     $obj->term = $term->term_name;
@@ -289,7 +288,6 @@ class PfeService
                     $obj->nb_docs_term = $term->documents->count();
 
                     $dataTerms[] = $obj;
-                    $dataResponse[] = $obj;
                 }
             }
             $dataEvents = [];
@@ -316,16 +314,23 @@ class PfeService
                 $obj->weight_event = $weightEventPass;
 
                 $dataEvents[] = $obj;
-                $dataResponse[] = $obj;
             }
 
-            $data = [];
-            foreach (collect($dataResponse)->sortByDesc('calc') as $item){
-                $data[] = $item;
+            $dataTermsStored = [];
+            foreach (collect($dataTerms)->sortByDesc('calc') as $item){
+                $dataTermsStored[] = $item;
+            }
+            $dataEventsStored = [];
+            foreach (collect($dataEvents)->sortByDesc('calc') as $item){
+                $dataEventsStored[] = $item;
             }
 
             $sumTerms = collect($dataTerms)->sum('calc');
             $sumEvents = collect($dataEvents)->sum('calc');
+
+            $obj = new \stdClass();
+            $obj->first = $sumTerms > $sumEvents ? $dataTermsStored : $dataEventsStored;
+            $obj->last = $sumEvents > $sumTerms ? $dataTermsStored : $dataEventsStored;
 
             return [
                 'status' => true,
@@ -334,7 +339,7 @@ class PfeService
                 'sum_events' => $sumEvents,
                 'selected_term' => $sumTerms > $sumEvents,
                 'selected_event' => $sumEvents > $sumTerms,
-                'data' => $data
+                'data' => $obj,
             ];
         }
         return [

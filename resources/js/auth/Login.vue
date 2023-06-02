@@ -25,6 +25,8 @@
                                         :rules="emailRules"
                                         required
                                     ></v-text-field>
+                                </v-col>
+                                <v-col cols="12">
                                     <v-text-field
                                         v-model="form.password"
                                         :type="showPassword ? 'text' : 'password'"
@@ -36,7 +38,6 @@
                                         @click:append-inner="showPassword = !showPassword"
                                         required
                                     ></v-text-field>
-
                                 </v-col>
                                 <v-col cols="12" class="text-center">
                                     <span>Pas de compte ? <router-link to="/auth/inscription">Créer maintenant</router-link></span>

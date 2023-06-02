@@ -428,17 +428,17 @@ export default {
         showReformulate(){
             //Q' = {{search_response.query}} + {{search_response.data[0].query}}
             if(this.search_response_personalized.selected_term){
-                this.req_reformulate_text = `Q' = ${this.search_response_personalized.data[0].query} + ${this.search_response_personalized.data[0].term}`;
+                this.req_reformulate_text = `Q' = ${this.search_response_personalized.data.first[0].query} + ${this.search_response_personalized.data.first[0].term}`;
             }else if(this.search_response_personalized.selected_event){
-                this.req_reformulate_text = `Q' = ${this.search_response_personalized.data[0].query} + ${this.search_response_personalized.data[0].event_pass}`;
+                this.req_reformulate_text = `Q' = ${this.search_response_personalized.data.first[0].query} + ${this.search_response_personalized.data.first[0].event_pass}`;
             }
             this.dialogReformulate = true;
         },
         closeShowReformulate(){
             if(this.search_response_personalized.selected_term){
-                this.form.query = `${this.search_response_personalized.data[0].query} ${this.search_response_personalized.data[0].term}`;
+                this.form.query = `${this.search_response_personalized.data.first[0].query} ${this.search_response_personalized.data.first[0].term}`;
             }else if(this.search_response_personalized.selected_event){
-                this.form.query = `${this.search_response_personalized.data[0].query} ${this.search_response_personalized.data[0].event_pass}`;
+                this.form.query = `${this.search_response_personalized.data.first[0].query} ${this.search_response_personalized.data.first[0].event_pass}`;
             }
             this.onSelectMode('classic_search');
             this.dialogReformulate = false;
