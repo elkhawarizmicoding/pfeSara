@@ -82,8 +82,76 @@
             </div>
             <v-container>
                 <Classic class="mt-3" :search_response.sync="search_response_classic" v-if="form.mode === 'classic_search' && search_response_classic.length > 0"></Classic>
-                <Personalized class="mt-3" :search_response.sync="search_response_personalized" v-else-if="form.mode === 'personalized_search' && search_response_personalized !== null && show_data"></Personalized>
-                <welcome v-else class="position-absolute custom-welcome"></welcome>
+                <v-row v-else>
+                    <v-col cols="12" md="4" sm="6">
+                        <v-row>
+                            <v-col cols="12">
+                                <v-card
+                                    class="mx-auto"
+                                >
+                                    <v-toolbar
+                                        class="custom-toolbar text-white"
+                                        color="#8e8e8e"
+                                        :title="`Liste des termes (${$store.state.userInfo.terms.length})`"
+                                    ></v-toolbar>
+                                    <v-card-text
+                                        style="height: 450px;"
+                                        class="overflow-hidden overflow-y-auto"
+                                    >
+                                        <v-list lines="one">
+                                            <v-list-item
+                                                v-for="(item, index) in $store.state.userInfo.terms"
+                                                :key="index"
+                                                :title="item.name"
+                                                :subtitle="`Docs (${item.docs}) ~ Poid est ${item.weight}`"
+                                            ></v-list-item>
+                                        </v-list>
+                                    </v-card-text>
+                                </v-card>
+                            </v-col>
+                            <v-col cols="12">
+                                <v-card
+                                    class="mx-auto"
+                                >
+                                    <v-toolbar
+                                        class="custom-toolbar text-white"
+                                        color="#8e8e8e"
+                                        :title="`Liste des pass événements (${$store.state.userInfo.events.length})`"
+                                    ></v-toolbar>
+                                    <v-card-text>
+                                        <v-list lines="one">
+                                            <v-list-item
+                                                v-for="(item, index) in $store.state.userInfo.events"
+                                                :key="index"
+                                                :title="`${item.name} (${item.lieu})`"
+                                                :subtitle="`Docs (${item.docs}) ~ At: ${item.date}`"
+                                            ></v-list-item>
+                                        </v-list>
+                                    </v-card-text>
+                                </v-card>
+                            </v-col>
+                            <v-col cols="12" v-if="form.mode === 'personalized_search' && search_response_personalized !== null && show_data">
+                                <v-btn
+                                    class="me-2 text-none text-white"
+                                    color="#ff993a"
+                                    variant="flat"
+                                    block
+                                    size="x-large"
+                                    @click="showReformulate()"
+                                >
+                                    Reformulation de requête
+                                </v-btn>
+                            </v-col>
+                        </v-row>
+                    </v-col>
+                    <v-col cols="12" md="8" sm="6">
+                        <Personalized :search_response.sync="search_response_personalized" v-if="form.mode === 'personalized_search' && search_response_personalized !== null && show_data"></Personalized>
+                        <welcome v-else class="custom-welcome"></welcome>
+                    </v-col>
+
+                </v-row>
+
+
             </v-container>
         </div>
         <!-- Select La Base -->
@@ -93,6 +161,12 @@
             persistent
         >
             <v-card>
+                <v-toolbar
+                    class="custom-toolbar text-white"
+                    color="#2c3e50"
+                    title="Sélection de la base la plus adéquate"
+                >
+                </v-toolbar>
                 <v-card-text>
                     <v-card
                         class="custom-border-selected"
@@ -160,6 +234,15 @@
                             </v-col>
                             <v-col cols="12">
                                 <v-text-field
+                                    v-model="area_profile"
+                                    type="text"
+                                    label="Domaines"
+                                    hide-details="auto"
+                                    readonly
+                                ></v-text-field>
+                            </v-col>
+                            <v-col cols="12">
+                                <v-text-field
                                     v-model="form_profile.full_name"
                                     type="text"
                                     label="Nom et prénom"
@@ -216,6 +299,23 @@
                 </v-card>
             </v-form>
         </v-dialog>
+        <!-- Reformulate -->
+        <v-dialog
+            v-model="dialogReformulate"
+            width="500"
+            persistent
+        >
+            <v-card>
+                <v-toolbar color="#8e8e8e" style="border-bottom: 2px solid #ff993a;">
+                    <v-toolbar-title class="text-white font-weight-bold">Reformulation de requête</v-toolbar-title>
+                    <v-btn class="text-white" icon="mdi-window-close" @click="closeShowReformulate()"></v-btn>
+                </v-toolbar>
+                <v-card-text class="d-grid" style="gap: 5px">
+                    <span style="font-size: 1.5em; font-weight: bold">Q' = Q + G</span>
+                    <span style="font-size: 1.5em; font-weight: bold" v-text="req_reformulate_text"></span>
+                </v-card-text>
+            </v-card>
+        </v-dialog>
     </v-layout>
 </template>
 
@@ -249,8 +349,11 @@ export default {
                 email: this.$store.state.userInfo.email,
                 sex: this.$store.state.userInfo.sex,
             },
+            area_profile: this.$store.state.userInfo.area,
             form_profile_error: false,
             form_profile_loading: false,
+            dialogReformulate: false,
+            req_reformulate_text: '',
         }
     },
     methods: {
@@ -321,6 +424,24 @@ export default {
                 this.form_profile_error = true;
             })
             this.form_profile_loading = false;
+        },
+        showReformulate(){
+            //Q' = {{search_response.query}} + {{search_response.data[0].query}}
+            if(this.search_response_personalized.selected_term){
+                this.req_reformulate_text = `Q' = ${this.search_response_personalized.data[0].query} + ${this.search_response_personalized.data[0].term}`;
+            }else if(this.search_response_personalized.selected_event){
+                this.req_reformulate_text = `Q' = ${this.search_response_personalized.data[0].query} + ${this.search_response_personalized.data[0].event_pass}`;
+            }
+            this.dialogReformulate = true;
+        },
+        closeShowReformulate(){
+            if(this.search_response_personalized.selected_term){
+                this.form.query = `${this.search_response_personalized.data[0].query} ${this.search_response_personalized.data[0].term}`;
+            }else if(this.search_response_personalized.selected_event){
+                this.form.query = `${this.search_response_personalized.data[0].query} ${this.search_response_personalized.data[0].event_pass}`;
+            }
+            this.onSelectMode('classic_search');
+            this.dialogReformulate = false;
         }
     }
 }

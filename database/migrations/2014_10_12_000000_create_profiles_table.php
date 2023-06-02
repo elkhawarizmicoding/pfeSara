@@ -20,7 +20,7 @@ return new class extends Migration
                 'policy',
                 'medicine',
                 'sport',
-                '',
+                'economy',
             ])->nullable();
             $table->string('specialty')->nullable();
             $table->integer('age')->nullable();

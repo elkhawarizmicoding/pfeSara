@@ -15,6 +15,17 @@ class AppController extends Controller
         ]);
         return response()->json((new PfeService())->login($request->toArray()));
     }
+    public function inscription(Request $request){
+        $request->validate([
+            'full_name' => 'required',
+            'phone' => 'required|unique:profiles',
+            'email' => 'required|email|unique:profiles',
+            'age' => 'required',
+            'sex' => 'required|in:women,man',
+            'area' => 'required|in:computer_science,policy,medicine,sport,economy',
+        ]);
+        return response()->json((new PfeService())->inscription($request->toArray()));
+    }
     public function search($mode, $query){
         $service = new PfeService();
         if($mode == 'classic_search'){
