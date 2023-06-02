@@ -60,7 +60,7 @@
                 <v-card-title>
                     <v-badge
                         color="#ff993a"
-                        :content="index+1"
+                        :content="lastIndex+(index+1)"
                         size="x-large"
                         inline
                         class="w-100 custom-v-badge"
@@ -112,12 +112,10 @@ export default {
     props: ['search_response'],
     name: "Personalized",
     data(){
-        return {}
+        return {
+            lastIndex: this.search_response.data.first.length,
+        }
     },
-    methods: {
-
-    },
-    computed: {}
 }
 </script>
 
