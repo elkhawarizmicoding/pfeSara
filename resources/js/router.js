@@ -2,6 +2,7 @@ import {createRouter, createWebHistory} from "vue-router";
 import Login from "./auth/Login.vue";
 import Dashboard from "./profile/Dashboard.vue";
 import store from "./store/index.js";
+import Inscription from "./auth/Inscription.vue";
 
 const routers = [
     {
@@ -10,6 +11,21 @@ const routers = [
         component: Login,
         meta: {
             title: 'Connexion',
+        },
+        beforeEnter: async (to, from, next) => {
+            const isLoggedIn = store.state.authenticated;
+            if (isLoggedIn) {
+                return next('/');
+            }
+            next();
+        },
+    },
+    {
+        path: '/auth/inscription',
+        name: 'Inscription',
+        component: Inscription,
+        meta: {
+            title: 'Une inscription',
         },
         beforeEnter: async (to, from, next) => {
             const isLoggedIn = store.state.authenticated;

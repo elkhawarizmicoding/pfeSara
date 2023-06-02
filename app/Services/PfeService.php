@@ -23,6 +23,13 @@ use Illuminate\Support\Facades\Http;
 
 class PfeService
 {
+    public function index(){
+        $pProfile = Profile::with(['terms', 'eventPasses'])->find(Auth::id());
+        return [
+            'terms' => TermViewResource::collection($pProfile->terms),
+            'events' => EventPassViewResource::collection($pProfile->eventPasses),
+        ];
+    }
     //================================================= Application[Store data to database ] =================================
     public function storeData($dataCsv){
         foreach ($dataCsv as $data){
@@ -215,7 +222,11 @@ class PfeService
     }
     //================================================= Application[Auth] ====================================================
     public function login($data){
-        $pProfile = Profile::query()->where('email', $data['email']);
+        $pProfile = Profile::with(['documents',
+            'terms.documents',
+            'eventPasses.documents',
+            'termTerms',
+            'termEventPasses'])->where('email', $data['email']);
         if(!$pProfile->exists()){
             return [
                 'status' => false,
@@ -232,11 +243,106 @@ class PfeService
         return [
             'status'=> true,
             'token' => $pProfile->createToken('token')->plainTextToken,
-            'info' => $pProfile->toArray()
+            'info' => new ProfileResource($pProfile)
         ];
+    }
+    public function inscription($data){
+        try {
+            $data['password'] = Hash::make($data['password']);
+            Profile::query()->create($data);
+            return [
+                'status'=> true,
+            ];
+        }catch (\Exception $e){
+            return [
+                'status'=> false,
+            ];
+        }
     }
     //================================================= Application ==========================================================
     public function searchPersonalized($query){
+        $pProfile = Profile::with([
+            'documents',
+            'terms.documents',
+            'eventPasses.documents',
+            'termTerms',
+            'termEventPasses'
+        ])->find(Auth::id());
+        $pTerm = $pProfile->terms->where('term_name', $query);
+        if($pTerm->count()){
+            $pTerm = $pTerm->first();
+            $pTerm = Term::with('documents')->find($pTerm->id);
+            $weightTerm = $this->calcWeightTerm($pProfile->freq_max, 1, $pProfile->nb_docs, $pTerm->documents->count());
+            $dataTerms = [];
+            $dataResponse = [];
+            foreach ($pProfile->terms as $term){
+                if($term->term_name != $query){
+                    $obj = new \stdClass();
+                    $obj->query = $query;
+                    $obj->term = $term->term_name;
+                    $obj->nb_docs_com = count(array_intersect(
+                        collect($term->documents)->pluck('id')->all(),
+                        collect($pTerm->documents)->pluck('id')->all(),
+                    ));
+                    $obj->calc = $this->calcSimTermTerm($term->documents->count(), $pTerm->documents->count(), $obj->nb_docs_com);
+                    $obj->nb_docs_query = $pTerm->documents->count();
+                    $obj->nb_docs_term = $term->documents->count();
+
+                    $dataTerms[] = $obj;
+                    $dataResponse[] = $obj;
+                }
+            }
+            $dataEvents = [];
+            foreach ($pProfile->eventPasses as $eventPass){
+                $weightEventPass = $this->calcWeightEventPass($eventPass->documents->count(), $pProfile->nb_docs);
+                $obj = new \stdClass();
+                $obj->query = $query;
+                $obj->event_pass = $eventPass->name;
+                $obj->nb_docs_com = count(array_intersect(
+                    collect($eventPass->documents)->pluck('id')->all(),
+                    collect($pTerm->documents)->pluck('id')->all(),
+                ));
+                $obj->calc = $this->calcSimTermEventPass(
+                    $weightTerm,
+                    $weightEventPass,
+                    $obj->nb_docs_com,
+                    $pTerm->documents->count(),
+                    $eventPass->documents->count(),
+                );
+
+                $obj->nb_docs_query = $pTerm->documents->count();
+                $obj->nb_docs_event = $eventPass->documents->count();
+                $obj->weight_query = $weightTerm;
+                $obj->weight_event = $weightEventPass;
+
+                $dataEvents[] = $obj;
+                $dataResponse[] = $obj;
+            }
+
+            $data = [];
+            foreach (collect($dataResponse)->sortByDesc('calc') as $item){
+                $data[] = $item;
+            }
+
+            $sumTerms = collect($dataTerms)->sum('calc');
+            $sumEvents = collect($dataEvents)->sum('calc');
+
+            return [
+                'status' => true,
+                'query' => $query,
+                'sum_terms' => $sumTerms,
+                'sum_events' => $sumEvents,
+                'selected_term' => $sumTerms > $sumEvents,
+                'selected_event' => $sumEvents > $sumTerms,
+                'data' => $data
+            ];
+        }
+        return [
+            "status" => false,
+            "message" => "Ce terme est introuvable"
+        ];
+    }
+    /*public function searchPersonalizedV1($query){
         $pProfile = Profile::with([
             'documents',
             'terms.documents',
@@ -317,7 +423,7 @@ class PfeService
             'selected_event' => $sumEvents > $sumTerms,
             'data' => $data
         ];
-    }
+    }*/
     public function searchV1($query){
         $query = strtolower($query);
         $pProfile = Profile::with([
@@ -443,12 +549,16 @@ class PfeService
         ];
     }
     public function updateProfile($data){
-        $profile = Profile::query()->find(Auth::id());
-        $profile->update($data);
+        $pProfile = Profile::with(['documents',
+            'terms.documents',
+            'eventPasses.documents',
+            'termTerms',
+            'termEventPasses'])->find(Auth::id());
+        $pProfile->update($data);
 
         return [
             'status' => true,
-            'info' => $profile
+            'info' => new ProfileResource($pProfile)
         ];
     }
 }

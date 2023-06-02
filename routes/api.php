@@ -23,4 +23,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
 Route::post('login', [AppController::class, 'login']);
+Route::post('inscription', [AppController::class, 'inscription']);
 Route::get('test/{query}', [TestController::class, 'test']);

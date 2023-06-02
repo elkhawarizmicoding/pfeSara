@@ -4,7 +4,7 @@
             <v-col cols="12" md="6" sm="7">
                 <v-card class="rounded-3" border>
                     <v-card-text>
-                        <v-form @submit.prevent="login">
+                        <v-form @submit.prevent="inscription">
                             <v-img
                                 src="../images/logo.png"
                                 width="100"
@@ -12,7 +12,30 @@
                             ></v-img>
                             <v-row class="mt-4">
                                 <v-col cols="12" v-if="error">
-                                    <v-alert text="Compte invalide" type="error"></v-alert>
+                                    <v-alert text="Inscription d'erreur. essayer à nouveau" type="error"></v-alert>
+                                </v-col>
+                                <v-col cols="12">
+                                    <v-select
+                                        :items="areas"
+                                        v-model="form.area"
+                                        label="Domaines"
+                                        hide-details="auto"
+                                        item-title="name"
+                                        item-value="value"
+                                        prepend-inner-icon="mdi-lan"
+                                        required
+                                    ></v-select>
+                                </v-col>
+                                <v-col cols="12">
+                                    <v-text-field
+                                        class="mb-2"
+                                        v-model="form.full_name"
+                                        type="text"
+                                        label="Nom et prénom"
+                                        hide-details="auto"
+                                        prepend-inner-icon="mdi-account"
+                                        required
+                                    ></v-text-field>
                                 </v-col>
                                 <v-col cols="12">
                                     <v-text-field
@@ -25,6 +48,33 @@
                                         :rules="emailRules"
                                         required
                                     ></v-text-field>
+                                </v-col>
+                                <v-col cols="12">
+                                    <v-text-field
+                                        v-model="form.phone"
+                                        type="tel"
+                                        label="Numéro de téléphone"
+                                        hide-details="auto"
+                                        prepend-inner-icon="mdi-phone"
+                                        required
+                                    ></v-text-field>
+                                </v-col>
+                                <v-col cols="12">
+                                    <v-text-field
+                                        v-model="form.age"
+                                        type="text"
+                                        label="Âge"
+                                        prepend-inner-icon="mdi-calendar-range"
+                                        hide-details="auto"
+                                    ></v-text-field>
+                                </v-col>
+                                <v-col cols="12">
+                                    <v-radio-group inline v-model="form.sex" hide-details="auto">
+                                        <v-radio label="Femmes" value="women"></v-radio>
+                                        <v-radio label="Homme" value="man"></v-radio>
+                                    </v-radio-group>
+                                </v-col>
+                                <v-col cols="12">
                                     <v-text-field
                                         v-model="form.password"
                                         :type="showPassword ? 'text' : 'password'"
@@ -36,10 +86,9 @@
                                         @click:append-inner="showPassword = !showPassword"
                                         required
                                     ></v-text-field>
-
                                 </v-col>
                                 <v-col cols="12" class="text-center">
-                                    <span>Pas de compte ? <router-link to="/auth/inscription">Créer maintenant</router-link></span>
+                                    <span>Vous avez déjà un compte ? <router-link to="/auth/login">Se connecter</router-link></span>
                                 </v-col>
                                 <v-col cols="12">
                                     <v-btn
@@ -49,7 +98,7 @@
                                         height="40"
                                         variant="flat"
                                         color="#3BA0E9"
-                                    >Se connecter</v-btn>
+                                    >Créer un compte</v-btn>
                                 </v-col>
                             </v-row>
                         </v-form>
@@ -63,7 +112,7 @@
 <script>
 
 export default {
-    name: "Login",
+    name: "Inscription",
     data(){
         return {
             loading: false,
@@ -85,24 +134,33 @@ export default {
                     return "Mot de passe requis."
                 },
             ],
+            areas: [//computer_science,policy,medicine,sport,economy
+                {name: "L'informatique", value: 'computer_science'},
+                {name: 'Politique', value: 'policy'},
+                {name: 'Médecine', value: 'medicine'},
+                {name: 'Sport', value: 'sport'},
+                {name: 'Économie', value: 'economy'},
+            ],
             form: {
+                full_name: null,
                 email: null,
                 password: null,
+                phone: null,
+                age: null,
+                area: null,
+                sex: 'women',
             },
             showPassword: false,
         }
     },
     methods: {
-        async login(){
+        async inscription(){
             this.loading = true
             this.error = false
-            await axios.post('login', this.form).then(res => {
+            await axios.post('inscription', this.form).then(res => {
                 const  response = res.data;
                 if(response.status){
-                    this.$store.commit('setAuthentication', true);
-                    this.$store.commit('setToken', response.token);
-                    this.$store.commit('setUserInfo', response.info);
-                    location.reload();
+                    this.$router.push('/auth/login');
                 }else{
                     this.error = true;
                 }

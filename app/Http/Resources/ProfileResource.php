@@ -25,10 +25,8 @@ class ProfileResource extends JsonResource
             "nb_docs" => $this->nb_docs,
             "freq_max" => $this->sex,
             "count_terms" => $this->count_terms,
-            "terms" => TermResource::collection($this->terms),
-            "term_terms" => TermTermResource::collection($this->termTerms),
-            "event_passes" => EventPassResource::collection($this->eventPasses),
-            "term_event_passes" => TermEventPassResource::collection($this->termEventPasses),
+            "terms" => TermViewResource::collection($this->terms),
+            "events" => EventPassViewResource::collection($this->eventPasses),
         ];
     }
 }
